@@ -1,31 +1,44 @@
 import { Button, FormControl, Input, InputLabel } from "@mui/material";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Todo from "./Todo";
-import db from "./firebase";
+import { db } from "./firebase-config";
 import "./App.css";
+import { collection, onSnapshot } from "firebase/firestore";
 
 function App() {
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState("");
 
   useEffect(() => {
-    db.collection("todos").onSnapshot((snapshot) => {
-      setTodos(snapshot.docs.map((doc) => doc.data().todo));
+    const newTodo = onSnapshot(collection(db, "todo"), (snapshot) => {
+      setTodos(
+        snapshot.docs.map((doc) => ({
+          ...doc.data(),
+          id: doc.id,
+        }))
+      );
     });
+    return newTodo;
   }, []);
 
   const addTodo = (e) => {
     e.preventDefault();
+
     setTodos([
       ...todos,
-      { id: Math.round(Math.random * 1000000), item: input },
+      {
+        id: Math.round(Math.random * 1000000),
+        item: input,
+      },
     ]);
     setInput("");
   };
 
   return (
     <div className="App">
-      <h1>Hello coders 🛩️!</h1>
+      <h1>
+        Hello coders <span role="img">🛩️</span>!
+      </h1>
       <form>
         <FormControl>
           <InputLabel>✅ Write todo: </InputLabel>
@@ -47,7 +60,7 @@ function App() {
       </form>
       <ul>
         {todos.map((todo) => (
-          <Todo item={todo.item} id={todo.id} />
+          <Todo key={todo.id} item={todo.item} />
         ))}
       </ul>
     </div>
